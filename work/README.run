@@ -1,0 +1,107 @@
+#WFIRST simulation scripts
+# Designed for running on NERSC machines in a shared environment
+#
+# *************************
+# ****** NOTE ***********
+# Before running, copy the work directory to a private area for editing and
+# testing. Don't change anything in the original work area. All scripts
+# can be run and test from your private copy.
+# *************************
+#
+# From within your copy of the work directory:
+#
+# For a quick test (~15 minutes), copy "config_files/config_fast_test.bash" 
+# to config.bash. Then execute "run.bash"
+#
+# FOr a slower test (~3 hours)a, copy "config_files/config_slow_test.bash
+#
+##################
+# This directory is intended to run all the scripts necessary to simulate the
+# WFIRST survey and obtain a Figure of Merit (FoM). It consists of bash
+# scripts that set up the correct environment to run the Python scripts
+# written by D. Rubin.
+#
+# See README.install for installation instructions. You only need to install once on 
+# a given NERSC machine.
+#
+# File "config.bash" is sourced by all the bash scripts described below. It provides
+# the environment variables, path names, file names, and  other parameters used
+# by the simulation. Examples are on subdirectory "config_files".
+#
+# Parameter files required by the simulation are in subdirectory "paramfiles". These
+# augment the parameter files that come with the wfirst repository 
+# (at /home/wfirst/wfirst/scripts/paramfiles).
+#
+# THe script "run.bash" runs all the required scripts, as  decribed below. 
+# Output is saved to two different directories ($WORKDIR1 and $WORKDIR2 defined in config.bash).
+#
+# Auxillary scripts "step1_plots.bash" and "step2_plots.bash" can be run interactively (at login
+# terminal) to make diagnostic plots of the output. 
+#
+################################################
+# Script details:
+#
+# 1. run step1 of simulation. 
+#
+#    ./step1.bash 
+#
+#    The script creates a subdirectory (WORKDIR1) where results are stored.
+#
+#    The name of input paramfile is specified in config.bash. E.G.
+#       PARAM_FILE = $WFIRST_PARAMS/paramfile_quick.csv 
+#
+#    The output log goes to $WORKDIR1/$STEP1_LOG
+#    and the output data goes to Python pickle file PICKLE_FILES_STEP1.
+#
+#    THe pyhton script used to run step1 of the simulation is 
+#    STEP1_PYSCRIPT.
+#
+#
+#############################
+#
+# 2. Calculate the Figure of Merit (FOM) based on the the results of step1 and a model for
+#    Type 1A lightcurves.
+#
+#    ./step2.bash 
+#
+#    Output appears in subdirectory $WORKDIR2. Diagnostic output goes to $WORKDIR2/$STEP2_LOG.
+#    Output data go to Python pickle file $WORKDRI2/$PICKLE_FILE_STEP2.
+#    The input data are taken from $WORKDIR1/$PICKLE_FILE_STEP1.
+#    THe Python script used to run the simulation is $STEP2_PYSCRIPT
+#
+#############################
+#
+# 3. determine figure-of-merit (FoM) from output of step2
+#
+#    ./step2_plots.bash
+#
+#    Output appears in $WORKDIR2.  Diagnostic output goes to $STEP2_GET_FOM_LOG.
+#    The Python script used to make the plots is $STEP2_GET_FOM_PYSCRIPT.
+#
+#
+#############################
+# Interactive scripts:
+#
+# 4. make plots to analyze the results from step1. 
+#
+#   From the same directory where "step1.bash" and "step2.bash" were run,
+#   exectute 
+#
+#    ./step1_plots.bash
+#   
+# This will make pdf plots showing diagnostic information concerningthe simulated sne and survey observations.
+# The output appears in $WORKDIR1. The Pythonb script used to make the plots is $STEP1_PLOT_PYSCRIPT
+#
+# 5. Make plots to diagnose the results from step2. Also redetermine the Figure of
+#    Merit (FoM) of the survey.
+#
+#   From the same directory where "step1.bash" and "step2.bash" were run,
+#   exectute 
+#
+#    ./step2_plots.bash
+#
+#    Output appears in $WORKDIR2.  Diagnostic output goes to $STEP2_PLOT_LOG.
+#    The Python script used to make the plots is $STEP2_PLOT_PYSCRIPT.
+#
+#
+#############################

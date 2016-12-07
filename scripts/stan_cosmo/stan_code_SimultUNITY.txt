@@ -1,0 +1,108 @@
+data {
+    int nsne;
+    int nrestlamb;
+    int neigen;
+    int nsys;
+    int nred;
+    int ncoeff;
+
+    int <lower = 0> zinds [nsne];
+
+    vector [nrestlamb] fluxes [nsne];
+    vector [nrestlamb] fluxerrs [nsne];
+
+    matrix [neigen, nrestlamb] eigen_vecs;
+
+    vector [nrestlamb] CCM_31;
+    vector [nrestlamb] CCM_dAdRV;
+
+    matrix [nred, ncoeff] redshift_coeffs;
+    matrix [nrestlamb, nsys] dflux_dsys [nsne];
+
+    vector [nsne] gray_variance;
+}
+
+parameters {
+    simplex [nrestlamb] rest_mod;
+
+    vector [nsne] mags;
+    vector [nred] mus;
+    real log_gray_disp;
+
+    //vector [nsne] log_true_EBV;
+    vector <lower = 0> [nsne] true_EBV;
+    vector [neigen] true_projs [nsne];
+
+    vector [ncoeff] log_R_EBV_coeff;
+    //vector [ncoeff] log_EBV_star_coeff;
+    vector [ncoeff] RV_coeff;
+
+    vector [nsys] dsys;
+
+    matrix [ncoeff, neigen] log_R_proj_coeff;
+    matrix [ncoeff-1, neigen] proj_star_variable_coeff;
+}
+
+transformed parameters {
+    vector [nred] log_R_EBV_by_red;
+    //vector [nred] log_EBV_star_by_red;
+    vector [nred] RV_by_red;
+    real gray_disp;
+    matrix [nred, neigen] log_R_proj_by_red;
+    matrix [nred, neigen] proj_star_by_red;
+    matrix [ncoeff, neigen] proj_star_coeff;
+
+    log_R_EBV_by_red <- redshift_coeffs * log_R_EBV_coeff;
+    //log_EBV_star_by_red <- redshift_coeffs * log_EBV_star_coeff;
+    RV_by_red <- redshift_coeffs * RV_coeff;
+    gray_disp <- exp(log_gray_disp);
+
+    log_R_proj_by_red <- redshift_coeffs * log_R_proj_coeff;
+
+    for (i in 1:ncoeff-1) {
+        proj_star_coeff[i+1] <- proj_star_variable_coeff[i];
+    }
+    for (i in 1:neigen) {
+        proj_star_coeff[1,i] <- 0;
+    }
+
+    proj_star_by_red <- redshift_coeffs * proj_star_coeff;
+}
+
+
+model {
+    vector [nrestlamb] themodel [nsne];
+    vector [nsne] log_R_EBV_by_SN;
+    //vector [nsne] log_EBV_star_by_SN;
+    vector [nsne] gray_by_SN;
+    vector [nsne] mus_by_SN;
+
+    for (i in 1:nsne) {
+        themodel[i] <- rest_mod .* exp(-log(10.) * 0.4 *
+                       (mags[i]
+		       + (CCM_31 + CCM_dAdRV*(RV_by_red[zinds[i] + 1] - 3.1))*true_EBV[i]
+		       + eigen_vecs' * true_projs[i] + dflux_dsys[i] * dsys));
+
+	log_R_EBV_by_SN[i] <- log_R_EBV_by_red[zinds[i] + 1];
+	//log_EBV_star_by_SN[i] <- log_EBV_star_by_red[zinds[i] + 1];
+        gray_by_SN[i] <- sqrt(gray_disp^2 + gray_variance[i]);
+	mus_by_SN[i] <- mus[zinds[i] + 1];
+    }
+
+    for (i in 1:nsne) {
+        fluxes[i] ~ normal(themodel[i], fluxerrs[i]);
+        true_projs[i] ~ normal(proj_star_by_red[zinds[i] + 1], exp(log_R_proj_by_red[zinds[i] + 1]));
+    }
+    
+    mags ~ normal(mus_by_SN, gray_by_SN);
+    //true_EBV ~ lognormal(log_EBV_star_by_SN, exp(log_R_EBV_by_SN));
+    true_EBV ~ exponential(exp(-log_R_EBV_by_SN));
+
+    dsys ~ normal(0, 1);
+    
+    // Soft parameter limits
+    log_R_EBV_by_red ~ normal(-2.3, 1);
+    //log_EBV_star_by_red ~ normal(-2.3, 1);
+    RV_by_red ~ normal(3.1, 3.1);
+    log_gray_disp ~ normal(-2.3, 1);
+}

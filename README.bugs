@@ -1,0 +1,11 @@
+Known Bugs
+
+1. Bash script named "run.bash" in work directory needs to invoke
+   "bash -l" at start in order to run correctly in batch mode. This
+   forces the script to read the users ~/.bashrc file. An attempt
+   was made to circumvent this by putting a copy of the required bashrc commands
+   in files "bashrc_system.bash" and "bashrc_ext_system.bash" which are sourced
+   by bash_wfirst.bash. This did not work.
+
+
+   

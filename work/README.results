@@ -1,0 +1,12 @@
+# README.results
+
+Here are results for running slow test (config_slow_test) on cori shared queue
+
+Tue Nov 22 12:57:27 PST 2016 Starting step1
+Tue Nov 22 13:22:06 PST 2016 Step1 completed
+Tue Nov 22 13:22:06 PST 2016 Starting step2
+Tue Nov 22 16:19:12 PST 2016 Step2 completed
+Tue Nov 22 16:19:12 PST 2016 Getting FOM
+Final_FoM 128.203294032
+Tue Nov 22 16:19:34 PST 2016 Done getting fom
+

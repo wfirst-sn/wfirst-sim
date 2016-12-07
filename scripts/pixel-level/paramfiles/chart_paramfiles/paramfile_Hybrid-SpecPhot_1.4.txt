@@ -1,0 +1,8 @@
+tier_redshifts			[0.8,1.4]
+acquisition			42.
+follow_fraction			[0.7]*6 + [0.5, 0.5, 0.4, 0.4, 0.3, 0.3, 0.25, 0.2] + [0.7]*12
+tier_filters			[("ground",), ("Y106.txt", "J129.txt")]
+total_time			1.57785e7
+cadence				5.
+tier_fractional_time		[0.25,0.75]
+IFS_SNs				[3.5, 6., 10., 3.5, 3.5] + [6., 10.] + [6, 3.5]

@@ -1,0 +1,57 @@
+Instructions for running the WFIRST survey simulation.
+D. Rabinowitz, 2016 Nov 18
+
+I.   Overview
+II.  Procedure Details
+III. Quick Tests
+
+I. Overview:
+
+  A very brief overview of the source code follows.  For an indepth undertanding, see the WFIRST paper by D. Rubin. A commented version of the source code is in preparation.
+
+The simulation source code consists of two primary Python scripts written by D. Rubin : 
+
+    STEP1_simulate_survey.py
+    STEP2_UNITY.py
+
+  Step1 simulates the detection and followup of type Ia supernova by the WFIRST mission. A detailed description of the survey parameters are provided in a parameter file. The output is a data file (Python pickle file) containing the detailed circumstances of the simulated observations.
+
+  Step2 determines a figure of merit for the survey by determining how well standard cosmological parameters would be measured given the circumstances of the simulated observations.
+
+  There are also two ancillary Python scripts used to create plots useful for analyzing the survey data:
+
+    STEP1A_plot_survey.py
+    STEP3_plot_results.py
+
+The later script also calculates the figure of merit given the results from STEP2_UNITY.py.
+
+II. Procedure Details:
+
+  (1): Create a parameter file for use by step1 of the simulation.
+
+       See examples at scripts/stan_cosmo/paramfiles.  These files are formatted as "comma-separated-value" (csv) spreadsheets that can be viewed and edited with standard spreadsheet editors (e.g. Excel)
+
+  (2)  Copy your paramfile to work/paramfiles
+
+  (3)  Edit work/config.bash so that variable "PARAM_FILE" references your new param file. E.G.:
+
+          export PARAM_FILE=my_new_paramfile.csv
+
+       Also modify the "ARGS" variable as desired. Theses are optional command line arguments read by step2 of the simulation code.  For example, to modify the number of times the survey is iterated, add "-niter=100" to the ARGS string.
+
+  (4)  Change to the work directory and execute "run.bash"
+
+     This will run step1, make plots of step1 output, run step2, make plots of the step1 output, and determine the figure-of-merit of the simulated survey.
+
+     THe output from steps 1 and 2 appear in subdirectories "step1_output" and "step2_output".
+
+III. Quick Tests
+
+   Not-so-quick test (~3 hour):
+
+      Change to the work directory, copy work/conf_files/config_slow_test.bash to work/config.bash. Then go to the work directory and execute "run.bash". This will simulate an ~1-sq-deg survey. It will take ~3 hours to run on an 8-core machine.
+
+   Very-quick test (~15 min):
+
+      Copy work/config_files/config_fast_test.bash to work/config.bash. Then to to the work directory and execute "run.bash". This simulates an ~0.1 sq-deg survey and samples the survey results only 10 times to determine the figure of merit (yielding nonsense results). It will take ~15 minutes on an 8-core machine.
+

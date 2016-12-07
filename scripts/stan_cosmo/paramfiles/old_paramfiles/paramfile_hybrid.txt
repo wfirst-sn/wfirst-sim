@@ -1,0 +1,16 @@
+tier_names		["Wide1", "Wide2", "Wide3", "Wide4", "Wide5", "Deep"]
+
+square_degrees		[9.6]*5 + [3.0]
+
+cadence			[5]*6
+
+filters			[("ground", ), ("ground", ), ("ground", ), ("ground", ), ("ground", ), ("Y106", "J129")]
+exp_times		[(None, ), (None, ), (None, ), (None, ), (None, ), (200., 200.)]
+
+dithers			[1,1,1,1,1,2]
+
+tier_fraction_time	[0.06, 0.06, 0.06, 0.06, 0.06, 0.7]
+
+
+trigger_frac            [  [[0.0, 0.5, 0.65, 0.8, 0.81, 3.0],[1.0, 1.0, 0.6, 0.3, 0.0, 0.0]]  ]*5 + [  [[0.0, 1.7, 1.71, 3.0],[1.0, 1.0, 0.0, 0.0]]  ]
+maximum_trigger		0.8

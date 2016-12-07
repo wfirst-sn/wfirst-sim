@@ -1,0 +1,15 @@
+tier_names		["Medium", "Deep"]
+
+square_degrees		[0.56, 0.56]
+
+cadence			[5,5]
+
+dithers			[2,2]
+
+tier_fraction_time	[0.5, 0.5]
+
+
+filters			[("Z087", "Y106"), ("Y106", "J129")]
+exp_times		[(100., 100.), (1000., 1000.)]
+
+trigger_frac            [  [[0.0, 0.8, 0.81, 3.0],[1.0, 1.0, 0.0, 0.0]],  [[0.0, 1.7, 1.71, 3.0],[1.0, 1.0, 0.0, 0.0]]  ]

@@ -1,0 +1,13 @@
+tier_names		["Medium", "Deep"]
+
+square_degrees		[14., 5.04]
+
+cadence			[5,5]
+
+dithers			[2,2]
+
+tier_fraction_time	[0.5, 0.5]
+
+
+filters			[("Z087", "Y106", "J129", "H158"), ("Y106", "J129", "H158", "F184")]
+exp_times		[(100., 100., 100., 100.), (300., 300., 300., 300.)]

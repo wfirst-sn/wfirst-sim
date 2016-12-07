@@ -1,0 +1,12 @@
+This package includes scripts and resource files to allow shared use 
+of D. Rubin's code to simulate WFIRST.
+
+If the code has not yet been installed, follow the instructions in "README.install".
+To run interactively, see "README.run" in subdirectory "work".
+To run as a batch job, see "README.batch" in subdirectory "work".
+
+
+version4: 
+   install.bash modified to put ".conda" directory in distribution 
+directory and to force no-dependencies during Python installs. 
+D. Rabinowitz 20176 Nov 29

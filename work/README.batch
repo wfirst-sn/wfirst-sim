@@ -1,0 +1,12 @@
+# README.batch
+
+ To run script "run.bash" as a queued job on cori, first copy the work directory
+ to your own private area. From within your private copy, modify config.bash and 
+ the param files as desired. Then execute "queue_job.bash".
+ THis will create a subdirectory at $SCRATCH called wfirst_sim.yyyymmddhhmmss
+ where yyyymmddhhmmss is the time you initiate queue_job.bash. Inside that
+ directory are the output directories created by run.bash. See README.run
+ for a description.
+
+
+ See README.results for sample test results

@@ -1,0 +1,22 @@
+# README.concorde
+# THe python scripts used to simulate WFIRST use the concorde traveling salesman problem (TSP) solver.
+# Before running the install script, the code should be downloaded and unpacked to local directory
+# "concorde" in the installation directory (the source included in this distribution may not be
+# appropriate for all computing platforms).
+
+# To get the concorde source (concorde-linux for Red Hat Linux 8.0) :
+
+  wget http://www.math.uwaterloo.ca/tsp/concorde/downloads/codes/src/co031219.tgz
+
+# or go to  
+
+#  http://www.math.uwaterloo.ca/tsp/concorde/downloads/downloads.htm
+
+# and download the appropriate source code.
+
+# NOTE: The simulation scripts use concorde to only approximately solve a 
+# traveling salesman problem. For more accurate solutions, you need to link
+# an LP solver to concorde. This installation skips that part.
+# See the concorde documentation at:
+
+#  http://www.math.uwaterloo.ca/tsp/concorde/DOC/README.html

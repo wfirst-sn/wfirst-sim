@@ -1,0 +1,28 @@
+Directions to install and test the WFIRST simulation code
+D. Rabinowitz, 2016 Dec 5 
+
+NOTE: This install script assumes you are working on the NERSC
+computers where python2.7/anaconda can be loaded as a module.
+The required Python packages are loaded into a local enviroment
+using conda. 
+
+After first unpacking the wfirst code, change to the
+installation directory and execute "./install.bash".
+
+This script will do the following:
+
+1. Create a bash resource file ("./work/bash_wfirst.bash") to be sourced by all the bash 
+   scripts in this installation. This sets up the required Python environment, paths,
+   and other environment variables.
+
+2. Loads the NERSC python-2.7/anaconda module, and then uses conda to create
+   a local package environment ("./wfirst-env") with 
+   the required Python packages ("wfirst-env" has links to a local ".conda" directory
+   which contains the libraries).
+
+3. Compile the concorde program required to solve travelling-salesman problem.
+
+Follow the instructions in README to run the simulations
+
+
+

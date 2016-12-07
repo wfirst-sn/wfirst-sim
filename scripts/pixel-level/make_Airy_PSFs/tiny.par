@@ -1,0 +1,152 @@
+&BeginPar7.5
+OOOOO  # Output PSF file rootname
+/Applications/tinytim-7.5/newnicmos2.tab  # Name of Zernike table file
+/Applications/tinytim-7.5/newnicmos2.pup  # Name of pupil table file
+00-00-0000 # Observation date (dd-mm-yyyy)
+NEWNICMOS_2  # Camera
+32  # Camera ID number
+No filter  # Filter
+No spectrum  # Spectrum file
+-1.000000  # Major axis jitter in mas (-1 = no jitter)
+-1.000000  # Minor axis jitter in mas
+0.000000  # Angle of jitter major axis in deg from +X axis
+1  # Number of positions
+128 128  # Position 1
+9.990  # PSF diameter in arcsecs
+1  # Skip wavelengths with low weights? (0=no)
+0.010000  # Min good weight limit coefficient
+1  # Number of wavelengths
+MMMMM 1.000000 512 # Wavelength 1 (microns), weight, grid size
+1320  # Integrated PSF dimension (pixels)
+0.007568  # Integrated PSF scaling (arcsec)
+0.100000  # Subsampling factor (1 = normal)
+2  #  Use mirror maps? (0 = no, otherwise yes)
+0.143000 # PAM position of camera best focus (mm)
+0.143000 # PAM position of observation (mm)
+1 # Adjust aberrations w.r.t. focus? (0=no)
+1 # Adjust aberrations w.r.t. X,Y? (0=no)
+0  # Write out pupil map at 1st wavelength?
+0  # Write out wave map at 1st wavelength?
+0  # Write out crit psf at 1st wavelength & stop?
+# Pupil Table :  newnicmos2.pup
+# Do not change the order of these entries!
+# Date : April 2003
+# Nicmos 2 camera information (after Sept 29, 2002)
+#----------------------------------------------------------------------------
+#
+# Optical Telescope Assembly pupil information
+#
+ 0.330  = OTA Secondary Mirror Radius
+ 0.022  = OTA Spider Width 
+#
+# Mirror pad positions and radii
+#
+  0.8921  0.0000 0.065 = OTA Pad 1 (V3, V2, Pad Radius)
+ -0.4615  0.7555 0.065 = OTA Pad 2
+ -0.4564 -0.7606 0.065 = OTA Pad 3
+#
+# NICMOS wavelength range
+#
+  700 2500  = min, max detector wavelength (nm)
+#
+# NICMOS cold mask obscuration parameters (rough estimates)
+#
+ 0.357  = NICMOS 2 Secondary radius
+ 0.072  = NICMOS 2 Spider width
+ 0.9768 = NICMOS 2 Outer radius of cold mask
+ 0.014  = NICMOS 2 cold mask rotation
+-0.323  = OTA aperture rotation
+ 0.048  0.100   = NICMOS cold mask V2,V3 pupil offsets
+# 
+#
+# NICMOS camera 2 rotation (relative to OTA)
+#
+   45.0  = NICMOS Camera 2 rotation
+#
+# Axial offset of NICMOS 2 camera
+#
+  317.1     -311.3   = NICMOS Camera 2 V2,V3 axial offset
+#
+# NICMOS 2 pixel scale (don't change this, it's not what you think!)
+#
+  0.0756812  = arcsec/pixel
+#
+# NICMOS cold-mask pads (cameras 2 and 3 only)
+#
+0.0000    0.7655   -0.7706 = NICMOS Pad V2
+0.9021   -0.4615   -0.4564 = NICMOS Pad V3
+0.1650    0.1650    0.1650 = NICMOS Pad X size 
+0.1410    0.1410    0.1410 = NICMOS Pad Y size 
+0.0000 -121.1500  121.5200 = NICMOS Pad rotation (degrees)
+#
+# Conversion factor from defocus in PAM space (mm) to wavefront error (microns)
+#
+ -0.0475   # PAM(mm) -> z4(microns)
+#
+# Aberration focus dependences (aberrations in microns in detector coordinates)
+# z = c1*z4^2 + c2*z4 + c3 (where c3 is supplied in the Zernike table file)
+#
+ 0.0000 -0.0202  = X Astigmatism (z5)
+ 0.0000 -0.0663  = Y Astigmatism (z6)
+ 0.0000  0.0000  = X Coma (z7)
+ 0.0000 -0.0676  = Y Coma (z8)
+ 0.0000  0.0677  = Spherical (z11)
+#
+# Aberration field dependences (aberrations in microns in detector coordinates)
+#
+# Focus (z4)
+#
+   -0.0118360  4.92325e-06  6.80747e-07
+ -4.13502e-05  6.19433e-07 -4.01200e-09
+  1.04970e-07 -2.88192e-09  1.97186e-11
+#
+# X Astigmatism (z5)
+   -0.0419142  0.000267614 -8.50913e-07
+  0.000200381  5.22625e-08  1.16788e-09
+ -3.34117e-07 -3.23222e-09  1.27907e-11
+#
+# 45 degree Astigmatism (z6)
+#
+    0.0232914 -0.000154028  5.79729e-07
+ -0.000164619  1.16237e-06 -5.24005e-09
+ -1.13486e-07 -1.38203e-09  1.68123e-11
+#
+# X Coma (z7)
+#
+  -0.00130092  4.91844e-05 -7.55309e-08
+  4.38350e-05 -7.45321e-07  1.67843e-09
+ -3.76607e-08  1.63131e-09 -8.32521e-12
+#
+# Y Coma (z8)
+#
+    0.0110031 -8.27373e-05  9.52821e-08
+  0.000161762 -1.35659e-06  1.73407e-09
+ -6.49740e-07  1.10046e-09  1.15120e-11
+# Zernike file for NICMOS 2 (with cryocooler after Sept 29, 2002)
+# Coefficients for field center
+# January 2003 
+#
+ 547.0 # Reference wavelength (nm) for coeffs
+  22    # Last Zernike in table
+0.000000 # Z1 : Constant
+0.000000 # Z2 : X Tilt
+0.000000 # Z3 : Y Tilt
+0.000000 # Z4 : Focus
+0.020283 # Z5 : 0 deg Astigmatism
+0.032641 # Z6 : 45 deg Astigmatism
+-0.01900 # Z7 : V2 Coma
+-0.00600 # Z8 : V3 Coma
+0.014999 # Z9 : X Clover
+0.016203 # Z10 : Y Clover
+-0.02011 # Z11 : 3rd order Spherical
+0.000000 # Z12 : X Spher. Astig
+0.000000 # Z13 : Y Spher. Astig
+0.000000 # Z14 : X Ashtray
+0.000000 # Z15 : Y Ashtray
+0.000000 # Z16
+0.000000 # Z17
+0.000000 # Z18
+0.000000 # Z19
+0.000000 # Z20
+0.000000 # Z21
+0.000000 # Z22 : 5th order Spherical

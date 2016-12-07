@@ -1,0 +1,14 @@
+tier_names		["Medium"]
+
+square_degrees		[27.44]
+
+cadence			[5]
+dithers			[2]
+
+
+filters			[("Z087", "Y106", "J129", "H158")]
+exp_times		[(100., 100., 100., 100.)]
+
+tier_fraction_time	[1.0]
+
+trigger_frac		[([0., 3.], [0., 0.])]
