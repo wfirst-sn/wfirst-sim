@@ -79,7 +79,7 @@ else:
 
                                   redwave = [8600.], # 12800
                                   MWZP = [0.003],
-                                  nnearby = [400, 800, 1200],
+                                  nnearby = [800, 400, 1200],
                                   MWnorm = [0.05],                                                            
                                   include_sys = [1, 0])
 
