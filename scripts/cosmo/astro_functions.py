@@ -88,6 +88,134 @@ def H_inv_wa(z, cparams):
         (1 + zp))
         )
 
+"""
+def binned_w_rho(z, zbins, wbins):
+    """Example zbins: [0, 0.5, 1.0]
+    Example wbins: [-1., -0.2, -0.5]"""
+
+    rho = 0.
+    last_rho = 1.
+
+    for i in range(len(zbins) - 1):
+        rho += (z >= zbins[i])*(z < zbins[i+1])*last_rho*((1. + z)/(1. + zbins[i]))**(3.*(1 + wbins[i]))
+        last_rho *= ((1. + zbins[i+1])/(1. + zbins[i]))**(3.*(1 + wbins[i]))
+    rho += (z >= zbins[-1])*last_rho*((1. + z)/(1. + zbins[-1]))**(3.*(1 + wbins[-1]))
+
+    return rho
+"""
+
+def binned_w_rho(z, zbins, wbins):
+    """Example zbins: [0, 0.5, 1.0]
+    Example wbins: [-1., -0.2, -0.5]"""
+
+    rho = 0.
+    last_rho = 1.
+
+    for i in range(len(zbins) - 1):
+        rho += (z >= zbins[i])*(z < zbins[i+1])*wbins[i]
+    rho += (z >= zbins[-1])*wbins[-1]
+
+    return rho
+
+
+"""
+import matplotlib.pyplot as plt
+z = arange(0.001, 2.0, 0.001)
+rho = binned_w_rho(z, [0., 0.5, 1.0], [-0.8, -0.7, -1.2])
+plt.plot(z, rho)
+drhodz = (rho[1:] - rho[:-1])/(z[1] - z[0])
+drhodz /= 0.5*(rho[1:] + rho[:-1])
+zmean = 0.5*(z[1:] + z[:-1])
+w = (1./3.)*(-3. + drhodz + drhodz*zmean)
+plt.plot(zmean, w)
+
+plt.savefig("tmp.pdf")
+plt.close()
+"""
+
+
+def H_inv_binw(z, cparams):
+    Om = cparams[0]
+    zbinswbins = cparams[1:]
+    
+    zbins = zbinswbins[:len(zbinswbins)/2]
+    wbins = zbinswbins[len(zbinswbins)/2:]
+
+    rho = binned_w_rho(z, zbins, wbins)
+    return 1./sqrt(Om*(1. + z)**3. + (1 - Om)*rho)
+
+def get_mu_binw(z_list, cparams):
+    assert cparams[1] == 0
+    assert len(cparams) > 4
+
+    r_list = n_integrate(z_list, H_inv_binw, cparams, pad_list = arange(41, dtype=float64)/20.)
+    return 5.*log10((1. + z_list)*r_list)
+
+
+def get_shiftparam_binw(cparams):
+    assert cparams[1] == 0
+    assert len(cparams) > 4
+
+    return sqrt(cparams[0])*n_integrate(log(1. + 1089.), lambda l1z, c: H_inv_binw(exp(l1z) - 1., c)*exp(l1z), cparams, pad_list = arange(0., 7., 0.01))[0]
+    
+
+"""
+
+print get_mu_binw(1, [0.3, 0., 0.5, -1., -0.2])  - 0.8899539724359327
+
+print get_shiftparam_binw([0.3, 0.0, 0.5, -1., -1.]) - 1.749686332235919
+print get_shiftparam_binw([0.3, 0.0, 0.5, -1., -0.2]) - 1.618651757891853
+"""
+
+def FoM_bin_w(z_list, muCmat, bins = [0., 0.5, 1.0]):
+    nbins = len(bins)
+
+    jacobian = zeros([len(z_list) + 1, nbins + 2], dtype=float64) # M, Om, wbins
+
+    jacobian[:-1, 0] = 1.
+    jacobian[:-1,1] = (get_mu_binw(z_list, cparams = concatenate(([0.301], bins, [-1]*nbins))) - get_mu_binw(z_list, cparams = concatenate(([0.3], bins, [-1]*nbins))))/0.001
+    jacobian[-1,1] = (   get_shiftparam_binw(cparams = concatenate(([0.301], bins, [-1]*nbins))) - get_shiftparam_binw(cparams = concatenate(([0.3], bins, [-1]*nbins)))  )/0.001
+
+
+    for i in range(nbins):
+        dw = 0.01
+        tmpw = zeros(nbins, dtype=float64) - 1
+        tmpw[i] += dw
+        #print tmpw
+
+        jacobian[:-1,i+2] = (get_mu_binw(z_list, cparams = concatenate(([0.3], bins, tmpw))) - get_mu_binw(z_list, cparams = concatenate(([0.3], bins, [-1]*nbins))))/dw
+        jacobian[-1,i+2] = (get_shiftparam_binw(cparams = concatenate(([0.3], bins, tmpw))) - get_shiftparam_binw(cparams = concatenate(([0.3], bins, [-1]*nbins))))/dw
+    #print jacobian
+    
+    shift_param0 = get_shiftparam_binw(cparams = concatenate(([0.3], bins, [-1]*nbins)))
+    #print shift_param0
+
+    wmat = zeros([len(muCmat) + 1]*2, dtype=float64)
+
+    wmat[:-1,:-1] = linalg.inv(muCmat)
+    wmat[-1,-1] = (shift_param0*0.002)**(-2.)
+    #print wmat
+    
+    paramwmat = dot(transpose(jacobian), dot(wmat, jacobian))
+    paramcmat = linalg.inv(paramwmat)
+    
+    print sqrt(diag(paramcmat)), "%.2g " % (1./linalg.det(paramcmat[2:, 2:]))
+
+"""
+FoM_bin_w(arange(0.05, 2.01, 0.05), muCmat = diag([0.01**2.]*40), bins = [0., 0.25, 0.5])
+FoM_bin_w(arange(0.05, 1.01, 0.05), muCmat = diag([0.005**2.]*20), bins = [0., 0.25, 0.5])
+"""
+
+import pyfits
+for sr in ["survey_00155", "survey_00155_2", "survey_00602", "survey_00401", "survey_00401_2", "survey_00501"]:
+    f = pyfits.open("/Users/rubind/Downloads/cmats/" + sr + "/FoM_IPC=0.02_nredcoeff=2_MWZP=0.003_MWnorm=0.05_fundcal=0.005_crnl=0.003_include_sys=1_graydisp=0.08_nnearby=800_redwave=8600.0_TTel=284/cmat.fits")
+    cmat = f[0].data
+    f.close()
+
+    z_list = concatenate(([0.05], arange(len(cmat) - 1)*0.05 + 0.125))
+    print sr, FoM_bin_w(z_list, muCmat = cmat, bins = [0., 1.0])
+
+
 def shift_parameter_Wmat(fractional_error, zp):
     el12 = -0.0288451
     el11 = 0.105128
