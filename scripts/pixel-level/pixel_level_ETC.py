@@ -110,7 +110,7 @@ def initialize_PSFs(scales = [2, 4, 5, 15, 22, 30], PSF_source = "NIC", path = w
 
     pixels = {}
 
-    files_found = glob.glob(path + "/" + PSF_source + "_PSFs/*5mas*fits")
+    files_found = glob.glob(path + "/make_" + PSF_source + "_PSFs/*5mas*fits")
     if len(files_found) == 0:
         files_found = glob.glob(path + "/" + PSF_source + "/*5mas*fits")
     assert len(files_found) > 0, "Couldn't find " + path + "/" + PSF_source
@@ -574,20 +574,22 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
         plt.close()
     
 
-
+    #print "HACK!!!!!!"*100
+    #oneD_PSFs[where(oneD_PSFs < 0.01)] = 0
 
     extract_denom = sum(sim_weight*oneD_PSFs*oneD_PSFs, axis = 1)
+    PSF_enclosed_flux = sum(oneD_PSFs, axis = 1)
 
     extracted_SN = sum(sim_weight*SN_image_with_noise*oneD_PSFs, axis = 1)/extract_denom
-    extracted_noise = 1./sqrt(sum(sim_weight*oneD_PSFs*oneD_PSFs, axis = 1))
-    extracted_zodinoise = sqrt(sum(sim_weight*zodi_image*oneD_PSFs, axis = 1)/extract_denom)
-    extracted_darknoise = sqrt(sum(sim_weight*dark_current_image*oneD_PSFs, axis = 1)/extract_denom)
-    extracted_readnoise = sqrt(sum(sim_weight*read_noise**2. * oneD_PSFs, axis = 1)/extract_denom)
-    extracted_thermalnoise = sqrt(sum(sim_weight*thermal_image*oneD_PSFs, axis = 1)/extract_denom)
-    extracted_galnoise = sqrt(sum(sim_weight*gal_image*oneD_PSFs, axis = 1)/extract_denom)
-    extracted_SNnoise = sqrt(sum(sim_weight*SN_photon_image*oneD_PSFs, axis = 1)/extract_denom)
+    extracted_noise = 1./sqrt(extract_denom)
+    extracted_zodinoise = sqrt(sum(sim_weight*zodi_image*oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
+    extracted_darknoise = sqrt(sum(sim_weight*dark_current_image*oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
+    extracted_readnoise = sqrt(sum(sim_weight*read_noise**2. * oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
+    extracted_thermalnoise = sqrt(sum(sim_weight*thermal_image*oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
+    extracted_galnoise = sqrt(sum(sim_weight*gal_image*oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
+    extracted_SNnoise = sqrt(sum(sim_weight*SN_photon_image*oneD_PSFs, axis = 1)/extract_denom/PSF_enclosed_flux)
 
-    eff_noise = 1./sqrt(sum(oneD_PSFs*oneD_PSFs, axis = 1))
+    eff_noise = (extracted_readnoise/read_noise)**2.
 
     yerr_flamb = photons_per_wave_to_flamb(extracted_noise/exp_time, effective_meters2(waves), waves, dwaves)
     yvalswitherr_flamb = photons_per_wave_to_flamb(extracted_SN/exp_time, effective_meters2(waves), waves, dwaves)
@@ -600,7 +602,7 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
                         "thermal_flamb_arcsec-2": thermal_flamb_arcsec2,
                         "plt_root": plt_root,
                         "PSFs": PSFs,
-                        "PSF_enclosed_flux": sum(oneD_PSFs, axis = 1),
+                        "PSF_enclosed_flux": PSF_enclosed_flux,
                         "rest_frame_band_mag": {},
                         "photons/s_obs": {}, "dark_photnoise": {}, "n_reselmnts": {}, "thermal_photnoise": {}, "zodi_photnoise": {}, "read_noise": {}, "SN_photnoise": {},
                         "f_lamb_SN": f_lamb_SN, "extracted_SN": extracted_SN,
@@ -890,22 +892,37 @@ def emulate_ETC(**kwargs):
 if __name__ == "__main__":
     print "Running as a demo!"
 
+    """
     print "Reading PSFs..."
-    PSFs = initialize_PSFs(scales = [30,60], PSF_source = "exp") # Native is in units of 5 mas, so this is 0".075, 0".11, and 0".15
-    
-    for pixel_scale in [0.15, 0.3]:
-        args = {"gal_flamb": lambda x:0., "pixel_scale": pixel_scale, "slice_in_pixels": 1, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 10000.}
-        PSFs = get_spec_with_err(redshift = 2.0, exp_time = 3600., show_plots = 1, phase = 0, **args)["PSFs"]
+    PSFs = initialize_PSFs(scales = [30,40,60,70,80], PSF_source = "exp") # Native is in units of 5 mas, so this is 0".075, 0".11, and 0".15
+
+    plt_results = []
+
+    for pixel_scale in [0.15, 0.2, 0.3, 0.35]:
+        for slice_in_pixels in [1,2]:
+            args = {"gal_flamb": lambda x:0., "pixel_scale": pixel_scale, "slice_in_pixels": slice_in_pixels, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 10000.}
+            ETC_result = get_spec_with_err(redshift = 2.0, exp_time = 3600., show_plots = 1, phase = 0, **args)
+            
+            plt_results.append((ETC_result["obs_waves"], ETC_result["f_lamb_SN"]/ETC_result["spec_S/N"] * ETC_result["obs_dwaves"], pixel_scale, slice_in_pixels))
+
+    for plt_result in plt_results:
+        plt.plot(plt_result[0], plt_result[1], label = str(plt_result[2]) + "_" + str(plt_result[2]*plt_result[3]))
+
+    plt.legend()
+    plt.savefig("test.pdf")
+    lfksdjalfkjd
+    """
 
 
+    """
+    """
 
-
-    fdsafsd
-
+    print "Reading PSFs"
     PSFs = initialize_PSFs(scales = [15, 22, 30], PSF_source = "WebbPSF") # Native is in units of 5 mas, so this is 0".075, 0".11, and 0".15
 
     args = {"gal_flamb": lambda x:0., "pixel_scale": 0.075, "slice_in_pixels": 2, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 4000.}
-    PSFs = get_spec_with_err(redshift = 1.0, exp_time = 1000., show_plots = 0, phase = 0, **args)["PSFs"]
+    print "Initializing oneD PSFs"
+    PSFs = get_spec_with_err(redshift = 0.01, exp_time = 1000., show_plots = 0, phase = 0, **args)["PSFs"]
 
     """
     import cProfile, pstats, StringIO
@@ -927,6 +944,12 @@ if __name__ == "__main__":
     #    exptime = solve_for_exptime(S_to_N = 14.14, redshift = redshift, key1 = "rest_frame_mean_S/N", key2 = (3900, 4900), restframe_bins = [3900, 4900], phase = 0, **args)
     #    print "##redshift/ exposure time ", redshift, exptime
 
+    res = get_spec_with_err(redshift = 0, exp_time = 1260, show_plots = 1, phase = 0, **args)
+
+    args["mdl"] = 0.10884806248*10**(-0.4*20) / res["obs_waves"]**2.
+    get_spec_with_err(redshift = 0, exp_time = 1260, show_plots = 1, phase = 0, **args)
+
+    fkldsjfldks
 
     for redshift in [0.05, 0.5, 1.0, 1.5]:
         exptime = solve_for_exptime(S_to_N = 10., redshift = redshift, key1 = "obs_frame", key2 = (10200, 12850), phase = 0, **args)
@@ -936,8 +959,11 @@ if __name__ == "__main__":
 
         for offset_i in arange(8, 15, 22):
             exptime = solve_for_exptime(S_to_N = 10., redshift = redshift, key1 = "obs_frame", key2 = (10200, 12850), phase = 0, offset_i = offset_i, **args)
-            get_spec_with_err(redshift = redshift, exp_time = exptime, show_plots = 1, phase = 0, offset_i = offset_i, **args)
-        
+            ETC_result = get_spec_with_err(redshift = redshift, exp_time = exptime, show_plots = 1, phase = 0, offset_i = offset_i, **args)
+            
+
+
+
 
     if 1:
         #import cProfile, pstats, StringIO

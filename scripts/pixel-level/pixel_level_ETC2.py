@@ -171,10 +171,6 @@ def spectrum_to_matched_resolution(specx, specy, min_wave, max_wave, IFUR, pixel
     
     spec_conv = multi_convolve(waves_highres, spec_highres, subsample = subsample, pixel_scale = pixel_scale)
     
-    plt.plot(waves_highres, spec_highres)
-    plt.plot(waves_highres, spec_conv)
-    plt.savefig("tmp.pdf")
-    plt.close()
 
     waves_lowres = resolution_to_wavelengths(source_dir = None, IFURfl = lambda x: IFUR(x), min_wave = min_wave, max_wave = max_wave)[0]
     return interp1d(waves_highres, spec_conv, kind = 'linear')(waves_lowres)
@@ -192,12 +188,12 @@ stop_here
 
 ######################################### Image Simulation #########################################
 
-def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "WebbPSF", path = wfirst_path + "/pixel-level/", min_wave = -1, max_wave = 1e20):
+def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "WebbPSF", path = wfirst_path + "/scripts/pixel-level/", min_wave = -1, max_wave = 1e20):
     PSFs = {"waves": []}
 
     pixels = {}
 
-    files_found = glob.glob(path + "/" + PSF_source + "_PSFs/*5mas*fits")
+    files_found = glob.glob(path + "/make_" + PSF_source + "_PSFs/*5mas*fits")
     if len(files_found) == 0:
         files_found = glob.glob(path + "/" + PSF_source + "/*5mas*fits")
     assert len(files_found) > 0, "Couldn't find " + path + "/" + PSF_source
@@ -209,7 +205,7 @@ def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "Webb
         
             f = pyfits.open(fl)
             TTPSF = f[0].data
-            assert TTPSF[len(TTPSF)/2, len(TTPSF[0])/2] == TTPSF.max(), "Max isn't in the middle! " + str(TTPSF.shape)
+            assert isclose(TTPSF[len(TTPSF)/2, len(TTPSF[0])/2], TTPSF.max(), rtol = 1e-2), "Max isn't in the middle! " + str(TTPSF.shape)
             f.close()
 
             TTPSF = fft.fft2(TTPSF)
@@ -575,8 +571,6 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
     #assert all(total_image < 6.e4), "Saturated pixels found!"
 
     if not use_R07_noise:
-        print "total_image read_noise[0] read_noise[1] ", total_image, read_noise[0], read_noise[1]
-
         total_noise = sqrt(total_image + read_noise[0]**2. + read_noise[1]**2.)
     else:
         total_noise = get_R07_noise(electron_count_rate = total_image/exp_time, t_int = exp_time, nframe = nframe)
@@ -991,7 +985,7 @@ if __name__ == "__main__":
 
     PSFs = initialize_PSFs(pixel_scales = [10, 15, 22, 30], slice_scales = [30, 30, 22, 30], PSF_source = "WebbPSF") # Native is in units of 5 mas, so this is 0".075, 0".11, and 0".15
 
-    args = {"gal_flamb": lambda x:0., "pixel_scale": 0.05, "slice_scale": 0.15, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 4200., "bad_pixel_rate": 0.01, "offset_par": 4}
+    args = {"gal_flamb": lambda x:0., "pixel_scale": 0.05, "slice_scale": 0.15, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 4200., "max_wave": 21000., "bad_pixel_rate": 0.0, "offset_par": 4}
     PSFs = get_spec_with_err(redshift = 1.0, exp_time = 1000., show_plots = 0, phase = 0, **args)["PSFs"]
 
     """
@@ -1014,14 +1008,17 @@ if __name__ == "__main__":
     #    exptime = solve_for_exptime(S_to_N = 14.14, redshift = redshift, key1 = "rest_frame_mean_S/N", key2 = (3900, 4900), restframe_bins = [3900, 4900], phase = 0, **args)
     #    print "##redshift/ exposure time ", redshift, exptime
 
+    """
     args["mdl"] = "27th_mag_ST.txt"
     args["psfsize"] = 11
     args["PSFs"] = None
     args["min_wave"] = 4200.
+    args["max_wave"] = 21000.
 
     get_spec_with_err(redshift = 0., exp_time = 100000, show_plots = 1, phase = 0, **args)
 
-    fdlksafljkds
+    stop_here
+    """
 
     for redshift in [0.05, 0.5, 1.0, 1.5]:
         exptime = solve_for_exptime(S_to_N = 10., redshift = redshift, key1 = "obs_frame", key2 = (10200, 12850), phase = 0, **args)
@@ -1029,9 +1026,11 @@ if __name__ == "__main__":
 
         get_spec_with_err(redshift = redshift, exp_time = exptime, show_plots = 1, phase = 0, **args)
 
+        """
         for offset_perp in arange(15, 17.):
             exptime = solve_for_exptime(S_to_N = 10., redshift = redshift, key1 = "obs_frame", key2 = (10200, 12850), phase = 0, offset_perp = offset_perp, **args)
             get_spec_with_err(redshift = redshift, exp_time = exptime, show_plots = 1, phase = 0, offset_perp = offset_perp, **args)
+        """
     stop_here
 
 
