@@ -32,14 +32,16 @@ def get_survey_efficiency(SN_data):
 
 
     observation_table = SN_data["observation_table"]
+    print observation_table
+    lfkjdslafjd
 
-    inds = where(observation_table["SNind"] == -2)
+    inds = where((observation_table["SNind"] == -2)*(observation_table["instr"] == "WFI"))
     CCSNe = sum(observation_table["exptime"][inds])
 
-    inds = where(observation_table["SNind"] == -1)
+    inds = where((observation_table["SNind"] == -1)*(observation_table["instr"] == "WFI"))
     imaging_only = sum(observation_table["exptime"][inds])
 
-    inds = where(observation_table["SNind"] >= 0)
+    inds = where((observation_table["SNind"] >= 0)*(observation_table["instr"] == "WFI"))
     SNeIa = sum(observation_table["exptime"][inds])
 
     total_exp_time = CCSNe*2. + SNeIa*2. + imaging_only
