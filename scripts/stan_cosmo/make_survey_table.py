@@ -26,6 +26,30 @@ def get_SNe_with_imaging_LCs(SN_data):
 
     return SNe_at_40, SNe_at_60
 
+def get_survey_efficiency(SN_data):
+    #for key in SN_data["SN_observations"]:
+    #    print key
+
+
+    observation_table = SN_data["observation_table"]
+
+    inds = where(observation_table["SNind"] == -2)
+    CCSNe = sum(observation_table["exptime"][inds])
+
+    inds = where(observation_table["SNind"] == -1)
+    imaging_only = sum(observation_table["exptime"][inds])
+
+    inds = where(observation_table["SNind"] >= 0)
+    SNeIa = sum(observation_table["exptime"][inds])
+
+    total_exp_time = CCSNe*2. + SNeIa*2. + imaging_only
+    print "total_exp_time ", total_exp_time
+    total_survey_time = SN_data["survey_parameters"]["total_survey_time"]*365.24*86400
+    return total_exp_time/total_survey_time
+
+    
+
+
 
 def get_FoM_from_file(item):
     f = pyfits.open(item)
@@ -128,6 +152,8 @@ def get_line_to_write(pic_cmat):
     if FoM_table:
         FoM = get_FoM_from_file(cmat)
         line_to_write += "%s,%.1f" % (cmat.split("/")[-2], FoM)
+    survey_eff = get_survey_efficiency(SN_data)
+    line_to_write += ",%.2f" % survey_eff
     
     return line_to_write
 
@@ -147,19 +173,21 @@ for i in range(len(zbins) - 1):
 
 if FoM_table:
     f = open("FoM_table.csv", 'w')
-    f.write("Survey,Cycle,Pixel Scale,Time Used,Tier Fraction,Spectra Type,Spectra S/N,Has Ground,Wide Square Degrees,Wide Exp Time per Filter,Deep Square Degrees,Deep Exp Time per Filter" + zbins_txt + ",SNe at S/N 40,SNe at S/N 60,FoM Params,FoM\n")
+    f.write("Survey,Cycle,Pixel Scale,Time Used,Tier Fraction,Spectra Type,Spectra S/N,Has Ground,Wide Square Degrees,Wide Exp Time per Filter,Deep Square Degrees,Deep Exp Time per Filter" + zbins_txt + ",SNe at S/N 40,SNe at S/N 60,FoM Params,FoM,Survey Efficiency\n")
 else:
     f = open("summary.csv", 'w')
-    f.write("Survey,Cycle,Pixel Scale,Time Used,Tier Fraction,Spectra Type,Spectra S/N,Has Ground,Wide Square Degrees,Wide Exp Time per Filter,Deep Square Degrees,Deep Exp Time per Filter" + zbins_txt + ",SNe at S/N 40,SNe at S/N 60\n")
+    f.write("Survey,Cycle,Pixel Scale,Time Used,Tier Fraction,Spectra Type,Spectra S/N,Has Ground,Wide Square Degrees,Wide Exp Time per Filter,Deep Square Degrees,Deep Exp Time per Filter" + zbins_txt + ",SNe at S/N 40,SNe at S/N 60,Survey Efficiency\n")
 
 pic_cmats = []
 for pic in glob.glob(sys.argv[1] + "/*/*pickle*"):
     print pic
 
-
-    for cmat in glob.glob(pic[:pic.rfind("/")] + "/*/cmat.fits")*FoM_table + [None]*(1 - FoM_table):
-        print cmat
-        pic_cmats.append((pic, cmat))
+    if FoM_table:
+        for cmat in glob.glob(pic[:pic.rfind("/")] + "/*/cmat.fits")*FoM_table + [None]*(1 - FoM_table):
+            print cmat
+            pic_cmats.append((pic, cmat))
+    else:
+        pic_cmats.append((pic, None))
 
 if len(pic_cmats) == 0:
     print "Couldn't match ", sys.argv[1], ", no cmats found!"

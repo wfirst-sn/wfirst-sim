@@ -88,7 +88,7 @@ def H_inv_wa(z, cparams):
         (1 + zp))
         )
 
-"""
+
 def binned_w_rho(z, zbins, wbins):
     """Example zbins: [0, 0.5, 1.0]
     Example wbins: [-1., -0.2, -0.5]"""
@@ -102,9 +102,9 @@ def binned_w_rho(z, zbins, wbins):
     rho += (z >= zbins[-1])*last_rho*((1. + z)/(1. + zbins[-1]))**(3.*(1 + wbins[-1]))
 
     return rho
-"""
 
-def binned_w_rho(z, zbins, wbins):
+
+def binned_rho_rho(z, zbins, wbins):
     """Example zbins: [0, 0.5, 1.0]
     Example wbins: [-1., -0.2, -0.5]"""
 
@@ -206,6 +206,7 @@ FoM_bin_w(arange(0.05, 2.01, 0.05), muCmat = diag([0.01**2.]*40), bins = [0., 0.
 FoM_bin_w(arange(0.05, 1.01, 0.05), muCmat = diag([0.005**2.]*20), bins = [0., 0.25, 0.5])
 """
 
+"""
 import pyfits
 for sr in ["survey_00155", "survey_00155_2", "survey_00602", "survey_00401", "survey_00401_2", "survey_00501"]:
     f = pyfits.open("/Users/rubind/Downloads/cmats/" + sr + "/FoM_IPC=0.02_nredcoeff=2_MWZP=0.003_MWnorm=0.05_fundcal=0.005_crnl=0.003_include_sys=1_graydisp=0.08_nnearby=800_redwave=8600.0_TTel=284/cmat.fits")
@@ -214,7 +215,7 @@ for sr in ["survey_00155", "survey_00155_2", "survey_00602", "survey_00401", "su
 
     z_list = concatenate(([0.05], arange(len(cmat) - 1)*0.05 + 0.125))
     print sr, FoM_bin_w(z_list, muCmat = cmat, bins = [0., 1.0])
-
+"""
 
 def shift_parameter_Wmat(fractional_error, zp):
     el12 = -0.0288451
