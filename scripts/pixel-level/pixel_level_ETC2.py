@@ -188,7 +188,7 @@ stop_here
 
 ######################################### Image Simulation #########################################
 
-def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "WebbPSF", path = wfirst_path + "/scripts/pixel-level/", min_wave = -1, max_wave = 1e20):
+def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "WebbPSF", path = wfirst_path + "/pixel-level/", min_wave = -1, max_wave = 1e20):
     PSFs = {"waves": []}
 
     pixels = {}
