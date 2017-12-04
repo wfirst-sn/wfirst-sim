@@ -199,7 +199,8 @@ def get_F99(this_rest_lambs):
     return F99_31, F99_dAdRV
 
 
-def generate_data(SN_data):
+# CHANGES
+def generate_data(SN_data,zerr,zerr_break):
     print "Reading PSFs..."
 
     PSFs = initialize_PSFs(pixel_scales = [10, 15, 30], slice_scales = [30, 30, 30], PSF_source = SN_data["survey_parameters"]["PSFs"]) # Native in units of 5 mas, so this is 0".075 and 0".15
@@ -319,7 +320,21 @@ def generate_data(SN_data):
     print "nsne ", nsne
 
     true_EBVs = random.exponential(size = nsne)*0.1
+
     redshift_vector = array([redshifts[zind] for zind in zinds])
+    redshift_variance=[]
+    #  add redshift variance DLR 20170731
+    for i in range (len(redshift_vector)):
+        z=redshift_vector[i]
+        if z>zerr_break:
+          zerr1 = zerr
+        else:
+          zerr1 = 0.001
+        dz = (1+z)*zerr1*random.normal()
+        while(z+dz<0.0):
+          dz = (1+z)*zerr1*random.normal()
+        redshift_variance.append(dz)
+        redshift_vector[i]=z+dz
 
     true_mags = random.normal(size = nsne)*sqrt(opts.gray**2. + 0.055**2. * redshift_vector**2.  + 0.00217147**2. / redshift_vector**2. )
     true_RVs = random.normal(size = nsne)*0.31 + 3.1
@@ -340,26 +355,34 @@ def generate_data(SN_data):
 
     for i in range(nsne):
         this_redshift = redshifts[zinds[i]]
+        dz = redshift_variance[i]
 
         print "*"*20 + " this_redshift ", this_redshift
 
         
 
         if this_redshift > 0.1:
-            this_rest_lambs = args["waves"]/(1. + this_redshift)
+            # add variance  DLR 20170731
+            #this_rest_lambs = args["waves"]/(1. + this_redshift)
+            this_rest_lambs = args["waves"]/(1. + this_redshift + dz)
         else:
             this_rest_lambs = exp(arange(log(3200.), log(9000.), 0.005))
 
 
+        # add variance  DLR 20170731
         if this_redshift > 0.1:
             # WFIRST
-            f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift, high_res_obs_waves, array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
-            this_eigen = array([item(high_res_obs_waves/(1 + this_redshift)) for item in eigen_fns])
-            F99_31, F99_dAdRV = get_F99(high_res_obs_waves/(1 + this_redshift))
+            #f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift, high_res_obs_waves, array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
+            #this_eigen = array([item(high_res_obs_waves/(1 + this_redshift)) for item in eigen_fns])
+            #F99_31, F99_dAdRV = get_F99(high_res_obs_waves/(1 + this_redshift))
+            f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift+dz, high_res_obs_waves, array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
+            this_eigen = array([item(high_res_obs_waves/(1 + this_redshift+dz)) for item in eigen_fns])
+            F99_31, F99_dAdRV = get_F99(high_res_obs_waves/(1 + this_redshift+dz))
 
         else:
             # Nearby
-            f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift, this_rest_lambs*(1 + this_redshift), array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
+            #f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift, this_rest_lambs*(1 + this_redshift), array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
+            f_lamb, NA, NA, NA = get_sncosmo('hsiao', this_redshift+dz, this_rest_lambs*(1 + this_redshift+dz), array([1e4]), phase = 0., absmag = -19.08 - 3.1*median(true_EBVs))
             this_eigen = array([item(this_rest_lambs) for item in eigen_fns])
             F99_31, F99_dAdRV = get_F99(this_rest_lambs)
         
@@ -549,7 +572,7 @@ def initfn():
         dsys = random.normal(size = nsys)*0.1
     )
 
-
+# START MAIN
 print "Here are the inputs:"
 print " ".join(sys.argv)
 parser = argparse.ArgumentParser()
@@ -580,6 +603,8 @@ parser.add_argument('-IGext', help='intergalactic extinction fractional uncertai
 parser.add_argument('-crnl', help='count-rate nonlinearity (mag)', type=float, default=0.005)
 parser.add_argument('-fund', help='fundamental calibration (mag)', type=float, default=0.005)
 parser.add_argument('-gray', help='gray dispersion (mag)', type=float, default=0.08)
+parser.add_argument('-zerr', help='redshift uncertainty', type=float, default=0.001)
+parser.add_argument('-zerr_break', help='redshift threshold for zerr', type=float, default=1.000)
 
 
 opts = parser.parse_args()
@@ -603,6 +628,7 @@ for key in SN_data["survey_parameters"]:
     print "survey_parameters ", key
 
 
+
 if opts.IFCdark == -1:
     opts.IFCdark = SN_data["survey_parameters"]["IFU_dark_current"]
 if opts.IFCRNfloor == -1:
@@ -619,7 +645,7 @@ if opts.TTel == -1:
 print opts
 
 
-stan_data, other_inputs = generate_data(SN_data)
+stan_data, other_inputs = generate_data(SN_data,opts.zerr,opts.zerr_break)
 
 print "Ready to start", time.asctime()
 

@@ -275,23 +275,42 @@ def get_Jacobian(z_list, zp):
 
 
 def get_FoM(SN_Cmat, z_list, zp = 0.3, addcmb = 1, adddesi = 0, verbose = True, shift_constraint = 0.002):
+
+    """
+       Fisher matrix is (dmu_a/dp_i)(Cov_ab**-1)(dmu_b/dp_j)
+       where a, b index supernova redshift bins,
+       i,j index the cosmological parameters {"om", "wp", and "wa"}= p_i for i = 1 to 3
+       and Cov_ab is the covariance matrix for measured mu values for each redshift bins
+
+       The covariance of params p_i is the inverse of the the Fisher Matrix
+    """
+
+    # Sne_W is Cov_ab**-1
     SNe_W = linalg.inv(SN_Cmat)
 
+    # jacobian is dmu_a/dp_i
     jacobian = get_Jacobian(z_list, zp)
 
+    # param_W is he Fisher matrix
     param_W = dot(transpose(jacobian), dot(SNe_W, jacobian))
 
+    # add priors by adding Fisher matrices for CMB and/or DESI
     if addcmb:
         param_W[1:,1:] += shift_parameter_Wmat(shift_constraint, zp)
     if adddesi:
         param_W[1:,1:] += DESI_Wmat(zp)
 
 
+    # The covariance of params p_i is the inverse of Param_W
     param_C = linalg.inv(param_W)
+  
+    # uncertainties for params p_i is the sqrt of the diagonal elements of param_C
     uncertainties = sqrt(diag(param_C))
     if verbose:
         print "Uncertainties ", uncertainties
 
+    # the Fom is the inverse of the area coveraged by the uncertainty ellipse for params 2 and 3("wp" and "wa")
+    # Fom = 1./sqrt(linalg.det(param_C[2:4,2:4]))
     return 1./sqrt(linalg.det(param_C[2:4,2:4])), uncertainties
 
 #################################################### End of FoM ###############################################

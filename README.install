@@ -1,10 +1,12 @@
 Directions to install and test the WFIRST simulation code
 D. Rabinowitz, 2016 Dec 5 
 
-NOTE: This install script assumes you are working on the NERSC
-computers where python2.7/anaconda can be loaded as a module.
+NOTE: This install script assumes you are working on a system where
+python2.7/anaconda is available or can be loaded as a module.
 The required Python packages are loaded into a local enviroment
-using conda. 
+using conda. If there is no anaconda module, you can instead install
+anaconda and make it the default python by putting the distribution at
+the head of your search path.
 
 After first unpacking the wfirst code, change to the
 installation directory and execute "./install.bash".
@@ -15,7 +17,7 @@ This script will do the following:
    scripts in this installation. This sets up the required Python environment, paths,
    and other environment variables.
 
-2. Loads the NERSC python-2.7/anaconda module, and then uses conda to create
+2. Loads the  python-2.7/anaconda module, and then uses conda to create
    a local package environment ("./wfirst-env") with 
    the required Python packages ("wfirst-env" has links to a local ".conda" directory
    which contains the libraries).

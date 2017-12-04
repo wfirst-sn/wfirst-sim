@@ -296,7 +296,10 @@ def make_plots_from_dir(item):
     else:
         outputdir = ""
     
-    (fit_params, stan_data, other_inputs) = pickle.load(open(item, 'rb'))
+    file = item[0]
+    print "Loading pickle file...", file
+
+    (fit_params, stan_data, other_inputs) = pickle.load(open(file, 'rb'))
 
     for key in fit_params:
         print "fit_params:", key
@@ -319,34 +322,92 @@ def make_plots_from_dir(item):
 
 
 
-    plot_RV_by_z(other_inputs = other_inputs, fit_params = fit_params)
-    mag_histogram(fit_params = fit_params)
-    plot_diag_mu_err(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
-    plot_EBV_err(fit_params = fit_params)
+    try:
+      plot_RV_by_z(other_inputs = other_inputs, fit_params = fit_params)
+    except:
+      print "plot_RV_by_z failed"
 
-    systematics_histograms(other_inputs = other_inputs, fit_params = fit_params, stan_data = stan_data)
-    plot_d_mu_d_sys(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
-    plot_d_mu_d_sys(other_inputs = other_inputs, stan_data = stan_data, offset = 0.02, fit_params = fit_params)
-    plot_d_mu_d_extinction(other_inputs = other_inputs, fit_params = fit_params, stan_data = stan_data)
-    plot_d_mu_d_RV_by_z(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
+    try:
+      mag_histogram(fit_params = fit_params)
+    except:
+      print "mag_histogram failed"
 
-    plot_delta_vs_value(other_inputs["true_EBVs"], fit_params["true_EBV"], "EBV_resid.pdf")
-    plot_delta_vs_value(other_inputs["true_mags"], fit_params["mags"], "mag_resid.pdf")
+    try:
+      plot_diag_mu_err(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
+    except:
+      print "plot_diag_mu_err failed"
+
+    try:
+       plot_EBV_err(fit_params = fit_params)
+    except:
+       print "plot_EBV_err failed"
+
+    try :
+      systematics_histograms(other_inputs = other_inputs, fit_params = fit_params, stan_data = stan_data)
+    except:
+      print "systematics_histograms failed"
+
+    try:
+      plot_d_mu_d_sys(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
+    except:
+      print "plot_d_mu_d_sys failed"
+
+    try:
+      plot_d_mu_d_sys(other_inputs = other_inputs, stan_data = stan_data, offset = 0.02, fit_params = fit_params)
+    except:
+      print "plot_d_mu_d_sys failed"
+
+    try:
+      plot_d_mu_d_extinction(other_inputs = other_inputs, fit_params = fit_params, stan_data = stan_data)
+    except:
+      print "plot_d_mu_d_extinction failed"
+
+    try:
+       plot_d_mu_d_RV_by_z(other_inputs = other_inputs, stan_data = stan_data, fit_params = fit_params)
+    except:
+      print "plot_d_mu_d_RV_by_z failed"
+
+    try:
+       plot_delta_vs_value(other_inputs["true_EBVs"], fit_params["true_EBV"], "EBV_resid.pdf")
+    except:
+      print "plot_delta_vs_value failed"
+
+    try:
+      plot_delta_vs_value(other_inputs["true_mags"], fit_params["mags"], "mag_resid.pdf")
+    except:
+      print "plot_delta_vs_value failed"
+
     if fit_params.has_key("true_dRV"):
-        plot_delta_vs_value(other_inputs["true_RVs"] - 3.1, fit_params["true_dRV"], "RV_resid.pdf", diff = 0)
-    plot_delta_vs_value(median(fit_params["mus"], axis = 0), fit_params["mus"], "mus_vs_mus.pdf")
 
+      try:
+        plot_delta_vs_value(other_inputs["true_RVs"] - 3.1, fit_params["true_dRV"], "RV_resid.pdf", diff = 0)
+      except:
+        print "plot_delta_vs_value failed"
+
+    try: 
+      plot_delta_vs_value(median(fit_params["mus"], axis = 0), fit_params["mus"], "mus_vs_mus.pdf")
+    except:
+      print "plot_delta_vs_value failed"
 
     print "Corner plots..."
-    make_corner(["RV_coeff", "log_EBV_star_coeff", "log_R_EBV_coeff"], "EBV_params.pdf", fit_params = fit_params)
-    make_multi_corner(["mus", "RV_by_red", "log_EBV_star_by_red", "log_R_EBV_by_red"], "RV_mus.pdf", fit_params = fit_params, stan_data = stan_data)
+
+    try:
+      make_corner(["RV_coeff", "log_EBV_star_coeff", "log_R_EBV_coeff"], "EBV_params.pdf", fit_params = fit_params)
+    except:
+      print "make_corner failed"
+
+    try:
+      make_multi_corner(["mus", "RV_by_red", "log_EBV_star_by_red", "log_R_EBV_by_red"], "RV_mus.pdf", fit_params = fit_params, stan_data = stan_data)
+    except:
+      print "make_multi_corner failed"
+
     return None
 
 
 ########################################## Starts Here ##########################################
 
 print "Usage: python ../plot_results.py pickle_hybrid.txt"
-redo_old_results = 0
+redo_old_results = 1
 
 
 files_to_do = sys.argv[1:]
@@ -366,10 +427,10 @@ for i in range(len(files_to_do))[::-1]:
             del files_to_do[i]
    
 
-procs_to_use = 20
-
-pool = mp.Pool(processes = procs_to_use)
-pool.map(make_plots_from_dir, files_to_do)
+#procs_to_use = 4 
+#pool = mp.Pool(processes = procs_to_use)
+#pool.map(make_plots_from_dir, files_to_do)
+make_plots_from_dir(files_to_do)
 
 print "Done!"
 

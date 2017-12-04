@@ -4,6 +4,10 @@
 # Copy the necessary scripts and config files to a scratch work area and
 # start a job to run both step1 and step2 of the WFIRST simulation
 #
+SCRATCH="/gpfs/scratch60/hep/rabinowitz/dlr29"
+EMAIL_ADDRESS="david.rabinowitz@yale.edu"
+CPUS_PER_TASK=8
+NUMBER_OF_TASKS=1
 
 # first source the config file to determine
 # computing environment
@@ -32,13 +36,13 @@ dt=`date +"%Y%m%d%H%M%S"`
 JOB_FILE="queue_job.$dt"
 
 # set the queue partition
-PARTITION=shared
+PARTITION="day"
 
 # set the scratch area to run the job
-SCRATCH_AREA=$CSCRATCH
+SCRATCH_AREA=$SCRATCH
 
 # set the JOB time limit
-RUN_TIME="00:15:00"
+RUN_TIME="15:00:00"
 
 # set the repository for charging the run tim
 REPOSITORY=m1187
@@ -79,15 +83,21 @@ cd $SCRATCH_AREA/$RUN_DIR
 
 echo '#!/bin/bash' >$JOB_FILE
 echo "#SBATCH --partition=$PARTITION" >>$JOB_FILE
-echo "#SBATCH -C haswell" >>$JOB_FILE
+#echo "#SBATCH -C haswell" >>$JOB_FILE
 echo "#SBATCH --time=$RUN_TIME" >>$JOB_FILE
 echo "#SBATCH --job-name=$JOB_NAME" >>$JOB_FILE
 echo "#SBATCH --mem=15000" >>$JOB_FILE
-echo "#SBATCH -A $REPOSITORY" >>$JOB_FILE
+#echo "#SBATCH -A $REPOSITORY" >>$JOB_FILE
+echo "#SBATCH --mail-type=ALL" >>$JOB_FILE
+echo "#SBATCH --mail-user=$EMAIL_ADDRESS" >>$JOB_FILE
+echo "#SBATCH --cpus-per-task=$CPUS_PER_TASK" >>$JOB_FILE
+echo "#SBATCH --ntasks=$NUMBER_OF_TASKS" >>$JOB_FILE
 echo "cd $SCRATCH_AREA/$RUN_DIR" >> $JOB_FILE
-echo "srun -n 1 -c 8 $WFIRST_SCRIPT" >>$JOB_FILE
-
+#echo "srun -n 1 -c 8 $WFIRST_SCRIPT" >>$JOB_FILE
+echo "$WFIRST_SCRIPT" >>$JOB_FILE
+chmod 775 $JOB_FILE
 cd $SCRATCH_AREA/$RUN_DIR
+echo "sbatch $SCRATCH_AREA/$RUN_DIR/$JOB_FILE"
 sbatch $JOB_FILE
 
 

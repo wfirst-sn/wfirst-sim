@@ -124,7 +124,8 @@ def resolution_to_wavelengths(source_dir, IFURfl, min_wave, max_wave, waves = No
     else:
         spec_R = interpfile(source_dir + "/" + IFURfl)
 
-    if waves == None:
+    #if waves == None:
+    if waves is None:
         waves = array([min_wave], dtype=float64)
         while waves[-1] <= max_wave:
             waves = append(waves, waves[-1]*exp(0.5/spec_R(waves[-1]))
@@ -258,10 +259,21 @@ def get_pixelized_PSF_noIPC(PSFs, pixel_scale, slice_scale, wave, offset_par, of
 
     len_PSF_over_two = len(PSFs[nearest_waves[0], pixel_scale, slice_scale])/2
 
-    PSF_at_wave = (nearest_weights[0]*PSFs[nearest_waves[0], pixel_scale, slice_scale][len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par: len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par: pixel_scale,
-                                                                    len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp: len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp: slice_scale] + 
-                   nearest_weights[1]*PSFs[nearest_waves[1], pixel_scale, slice_scale][len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par: len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par: pixel_scale,
-                                                                    len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp: len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp: slice_scale])
+    PSF_at_wave = (
+                   nearest_weights[0]*PSFs[nearest_waves[0], pixel_scale, slice_scale]
+                    [int(len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par): 
+                    int(len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par): 
+                    int(pixel_scale),
+                    int(len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp): 
+                    int(len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp): int(slice_scale)]
+                    + 
+                   nearest_weights[1]*PSFs[nearest_waves[1], pixel_scale, slice_scale]
+                    [int(len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par): 
+                    int(len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par): 
+                    int(pixel_scale), 
+                    int(len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp): 
+                    int(len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp): int(slice_scale)]
+                  )
     assert len(PSF_at_wave) >= psfsize, "PSF .fits is too small!"
 
 
@@ -462,10 +474,19 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
 
     
     
-    if read_noise == None:
+    if read_noise is None:
+        if read_noise_floor is None:
+           print "#get_spec_with_err : read_noise_floor is None. Setting to 4."
+           read_noise_floor = 4.
         read_noise = (read_noise_floor, sqrt(
             12.* white_noise**2. * (exp_time/0.65 - 1.)/ (exp_time/0.65) / (exp_time/0.65  + 1.)
         ))
+        print "#get_spec_with_err : read_noise is None. setting read_noise to"
+        print (read_noise)
+    else:
+        print "#get_spec_with_err : read_noise is not None:"
+        print (read_noise)
+
 
     # Starting model:
     
@@ -474,7 +495,7 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
     print "waves ", waves.min(), waves.max(), len(waves)
     if show_plots:
         savetxt("output/wavelengths.txt", zip(arange(1, len(waves + 1)), waves), fmt = ["%i", "%f"])
-    if fine_waves == None:
+    if fine_waves is None:
         fine_waves = arange(3000., 22001., 10.)
 
     try:
@@ -502,7 +523,7 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
         f_lamb_SN_fine = flambfn(fine_waves)
         f_lamb_SN_at_max = flambfn(waves)
 
-    if PSFs == None:
+    if PSFs is None:
         PSFs = initialize_PSFs(pixel_scales = [int(round(pixel_scale/0.005))], slice_scales = [int(round(slice_scale/0.005))])
 
     # For reference: waves, dwaves = resolution_to_wavelengths(source_dir, IFURfl, min_wave, max_wave, waves)
@@ -539,7 +560,7 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
     galaxy_photons_per_sec_perarcsec2 = flamb_to_photons_per_wave(gal_flamb(waves), effective_meters2(waves), waves, dwaves)
 
 
-    if thermalfl == None:
+    if thermalfl is None:
         thermal_background_per_pix_per_sec = get_thermal_background_per_pix_per_sec(waves, dwaves, sqrt(pixel_scale*slice_scale), TTel = TTel,
                                                                                     throughput = effective_meters2(waves)/(pi*1.2**2.))
         
@@ -571,7 +592,14 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
     #assert all(total_image < 6.e4), "Saturated pixels found!"
 
     if not use_R07_noise:
+      try:
         total_noise = sqrt(total_image + read_noise[0]**2. + read_noise[1]**2.)
+      except:
+        print "#get_spec_with_err : ERROR : can't evaluate sqrt of (total_image + read_noise[0]**2. + read_noise[1]**2.)"
+        print "#get_spec_with_err : total_image"
+        print (total_image)
+        print "#get_spec_with_err : read_noise"
+        print (read_noise)
     else:
         total_noise = get_R07_noise(electron_count_rate = total_image/exp_time, t_int = exp_time, nframe = nframe)
 
@@ -607,7 +635,7 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
 
     for i, wave in enumerate(waves):
         PSFsig = PSFs[(int(round(pixel_scale/0.005)), "sigmaFN")](wave)
-        if aper_rad_fn == None:
+        if aper_rad_fn is None:
             aper_rad = 2.5*PSFsig/float(pixel_scale/0.005)
         else:
             aper_rad = aper_rad_fn(wave)/float(pixel_scale)
@@ -788,7 +816,7 @@ def solve_for_exptime(S_to_N, redshift, PSFs, key1 = "obs_frame", key2 = (10200,
     SNs = [get_spec_with_err(redshift, exp_time = item, PSFs = PSFs, show_plots = 0, **kwargs)[key1][key2]
            for item in times]
     
-    if SNs[0] == None:
+    if SNs[0] is None:
         return None
 
     while (max(SNs) < S_to_N) or (min(SNs) > S_to_N):
@@ -820,7 +848,7 @@ def solve_for_exptime(S_to_N, redshift, PSFs, key1 = "obs_frame", key2 = (10200,
 
 def get_imaging_SN(PSFs, exp_time, effective_meters2_fl, wavemin = 4000, wavemax = 25000, waves = None, redshift=0, phase=0, gal_flamb = lambda x:0., pixel_scale = 0.11, IPC = 0.02, offset_par = 5, offset_perp = 5, source_dir = "input", zodi_fl = "aldering.txt", mdl = "hsiao", dark_current = 0.015, TTel = 282., verbose = False, approximate_PSF = True, bad_pixel_rate = 0):
     scale = int(round(pixel_scale/0.005))
-    if waves == None:
+    if waves is None:
         waves = arange(wavemin, wavemax, 50.) # These should span (and perhaps slightly overfill) the filter
         dwaves = ones(len(waves), dtype=float64)*50.
     else:
@@ -916,7 +944,7 @@ def get_imaging_SN(PSFs, exp_time, effective_meters2_fl, wavemin = 4000, wavemax
     if verbose:
         print "thermal_photons_per_pixsec ", effective_meters2_fl, thermal_photons_per_pixsec
 
-    if PSFs == None:
+    if PSFs is None:
         PSFs = initialize_PSFs(pixel_scales = [int(round(pixel_scale/0.005))], slice_scales = [int(round(pixel_scale/0.005))])
     if approximate_PSF:
         the_PSF = get_approximate_pixelized_broadband_PSF(PSFs, scale = int(round(pixel_scale/0.005)), waves = waves, weights = photons_SN_per_secwave/sum(photons_SN_per_secwave), IPC = IPC, offset_par = offset_par, offset_perp = offset_perp)

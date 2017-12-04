@@ -5,8 +5,5 @@ If the code has not yet been installed, follow the instructions in "README.insta
 To run interactively, see "README.run" in subdirectory "work".
 To run as a batch job, see "README.batch" in subdirectory "work".
 
-
-version4: 
-   install.bash modified to put ".conda" directory in distribution 
-directory and to force no-dependencies during Python installs. 
-D. Rabinowitz 20176 Nov 29
+2017 Dec 4
+D. Rabinowitz :  Latest version running on Yale HEP computers
