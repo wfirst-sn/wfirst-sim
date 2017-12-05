@@ -16,5 +16,10 @@ if  [ ! -d $WFIRST_SIM_DATA ]; then
   exit 1
 fi
 
+WFIRST_ROOT=`pwd`
+BASH_RESOURCE_FILE=$WFIRST_ROOT/work/bash_wfirst.bash
+echo "export WFIRST_SIM_DATA=$WFIRST_ROOT/$WFIRST_SIM_DATA"  >> $BASH_RESOURCE_FILE
+
+
 echo "$WFIRST_SIM_DATA successfully downloaded "
 
