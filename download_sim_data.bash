@@ -8,7 +8,7 @@ WFIRST_SIM_DATA="wfirst-sim-data"
  
 d0=`pwd`
 
-# get the concorde source
+# get the  source
 git clone $SOURCE_PATH
 
 if  [ ! -d $WFIRST_SIM_DATA ]; then

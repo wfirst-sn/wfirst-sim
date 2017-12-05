@@ -1,6 +1,8 @@
 Directions to install and test the WFIRST simulation code
 D. Rabinowitz, 2016 Dec 5 
 
+NOTE: After running the install script, then run "download_sim_data.bash"
+
 NOTE: This install script assumes you are working on a system where
 python2.7/anaconda is available or can be loaded as a module.
 The required Python packages are loaded into a local enviroment
