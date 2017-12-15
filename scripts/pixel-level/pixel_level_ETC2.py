@@ -7,6 +7,8 @@ import commands
 import sys
 from astropy import cosmology
 import sncosmo
+from matplotlib import use
+use("PDF")
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "serif"
 from matplotlib import style
@@ -124,7 +126,7 @@ def resolution_to_wavelengths(source_dir, IFURfl, min_wave, max_wave, waves = No
     else:
         spec_R = interpfile(source_dir + "/" + IFURfl)
 
-    if waves == None:
+    if any(waves == None):
         waves = array([min_wave], dtype=float64)
         while waves[-1] <= max_wave:
             waves = append(waves, waves[-1]*exp(0.5/spec_R(waves[-1]))
@@ -245,6 +247,8 @@ def initialize_PSFs(pixel_scales = [15], slice_scales = [20], PSF_source = "Webb
 
     return PSFs
 
+def aint(val):
+    return int(around(val))
 
 def get_pixelized_PSF_noIPC(PSFs, pixel_scale, slice_scale, wave, offset_par, offset_perp, psfsize = 7):
     """Interpolates monochromatic, pixel-convolved PSFs to a given wavelength and takes a sample for every pixel. No IPC."""
@@ -256,12 +260,13 @@ def get_pixelized_PSF_noIPC(PSFs, pixel_scale, slice_scale, wave, offset_par, of
     nearest_weights = [(nearest_waves[1] - wave)/(nearest_waves[1] - nearest_waves[0]), (wave - nearest_waves[0])/(nearest_waves[1] - nearest_waves[0])]    
     assert abs(dot(nearest_weights, nearest_waves) - wave) < 1, "Bad interpolation!"
 
-    len_PSF_over_two = len(PSFs[nearest_waves[0], pixel_scale, slice_scale])/2
+    len_PSF_over_two = aint(len(PSFs[nearest_waves[0], pixel_scale, slice_scale])/2)
 
-    PSF_at_wave = (nearest_weights[0]*PSFs[nearest_waves[0], pixel_scale, slice_scale][len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par: len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par: pixel_scale,
-                                                                    len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp: len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp: slice_scale] + 
-                   nearest_weights[1]*PSFs[nearest_waves[1], pixel_scale, slice_scale][len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par: len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par: pixel_scale,
-                                                                    len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp: len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp: slice_scale])
+                                                                
+    PSF_at_wave = (nearest_weights[0]*PSFs[nearest_waves[0], pixel_scale, slice_scale][aint(len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par): aint(len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par): pixel_scale,
+                                                                    aint(len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp): aint(len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp): slice_scale] + 
+                   nearest_weights[1]*PSFs[nearest_waves[1], pixel_scale, slice_scale][aint(len_PSF_over_two - floor(psfsize/2.)*pixel_scale + offset_par): aint(len_PSF_over_two + ceil(psfsize/2.)*pixel_scale + offset_par): pixel_scale,
+                                                                    aint(len_PSF_over_two - floor(psfsize/2.)*slice_scale + offset_perp): aint(len_PSF_over_two + ceil(psfsize/2.)*slice_scale + offset_perp): slice_scale])
     assert len(PSF_at_wave) >= psfsize, "PSF .fits is too small!"
 
 
@@ -314,6 +319,7 @@ def get_approximate_pixelized_broadband_PSF(PSFs, scale, waves, weights, IPC, of
 def get_1D_pixelized_sliced_PSFs(PSFs, pixel_scale, slice_scale, waves, IPC, offset_par = 0, offset_perp = 0, psfsize = 7):
     """Simulates a small IFU; for a S/N calculation, that's good enough. i = parallel j = perpendicular to slice"""
 
+
     if PSFs.has_key((pixel_scale, slice_scale, waves.min(), waves.max(), IPC, offset_par, offset_perp)):
         return PSFs[(pixel_scale, slice_scale, waves.min(), waves.max(), IPC, offset_par, offset_perp)], PSFs
 
@@ -322,7 +328,8 @@ def get_1D_pixelized_sliced_PSFs(PSFs, pixel_scale, slice_scale, waves, IPC, off
 
 
     for j, wave in enumerate(waves):
-        twoD_PSF = get_pixelized_PSF_noIPC(PSFs, pixel_scale = pixel_scale, slice_scale = slice_scale, wave = wave, offset_par = offset_par, offset_perp = offset_perp, psfsize = psfsize)
+        twoD_PSF = get_pixelized_PSF_noIPC(PSFs, pixel_scale = pixel_scale, slice_scale = slice_scale, wave = wave,
+                                           offset_par = offset_par, offset_perp = offset_perp, psfsize = psfsize)
         
         for i in range(psfsize):
             oneD_PSFs[j, i*psfsize:(i+1)*psfsize] = twoD_PSF[:,i]
@@ -376,6 +383,8 @@ def get_thermal_background_per_pix_per_sec(waves, dwaves, pixel_scale, TTel, R =
         waves**4. * (exp(1.43878e8/(TTel*waves)) - 1)
     )
     
+
+#print get_thermal_background_per_pix_per_sec(waves = 19932.0001929, dwaves = 1., pixel_scale = 1., TTel = 282.)
 
 
 """
@@ -563,6 +572,10 @@ def get_spec_with_err(redshift, exp_time, phase = 0, gal_flamb = lambda x:0., pi
     gal_image = transpose(transpose(zeros(oneD_PSFs.shape, dtype=float64)) + galaxy_photons_per_sec_perarcsec2*exp_time*pixel_scale*slice_scale)
     thermal_image = transpose(transpose(zeros(oneD_PSFs.shape, dtype=float64)) + thermal_background_per_pix_per_sec*exp_time)
     dark_current_image = zeros(oneD_PSFs.shape, dtype=float64) + dark_current*exp_time
+    #dark_current_image = random.lognormal(log(dark_current), 1, size = oneD_PSFs.shape)*exp_time
+    
+
+
     AB_mag_images = {}
     for AB_mag in AB_mags:
         AB_mag_images[AB_mag] = transpose(transpose(oneD_PSFs)*AB_mag_per_sec[AB_mag])*exp_time
@@ -818,9 +831,9 @@ def solve_for_exptime(S_to_N, redshift, PSFs, key1 = "obs_frame", key2 = (10200,
 ######################################### Signal-to-Noise Imaging Calculation #########################################
 
 
-def get_imaging_SN(PSFs, exp_time, effective_meters2_fl, wavemin = 4000, wavemax = 25000, waves = None, redshift=0, phase=0, gal_flamb = lambda x:0., pixel_scale = 0.11, IPC = 0.02, offset_par = 5, offset_perp = 5, source_dir = "input", zodi_fl = "aldering.txt", mdl = "hsiao", dark_current = 0.015, TTel = 282., verbose = False, approximate_PSF = True, bad_pixel_rate = 0):
+def get_imaging_SN(PSFs, exp_time, effective_meters2_fl, wavemin = 4000, wavemax = 25000, waves = None, redshift=0, phase=0, gal_flamb = lambda x:0., pixel_scale = 0.11, IPC = 0.02, offset_par = 5, offset_perp = 5, source_dir = "input", zodi_fl = "aldering.txt", mdl = "hsiao", dark_current = 0.015, TTel = 282., verbose = False, approximate_PSF = True, bad_pixel_rate = 0, read_noise_floor = 5., read_noise_white = 20.):
     scale = int(round(pixel_scale/0.005))
-    if waves == None:
+    if any(waves == None):
         waves = arange(wavemin, wavemax, 50.) # These should span (and perhaps slightly overfill) the filter
         dwaves = ones(len(waves), dtype=float64)*50.
     else:
@@ -844,8 +857,8 @@ def get_imaging_SN(PSFs, exp_time, effective_meters2_fl, wavemin = 4000, wavemax
                       3.* 20.**2. / (exp_time/11.3)
                  )
     """
-    read_noise = sqrt(5.**2 + 
-                      12.* 20.**2. * (exp_time/2.825 - 1.)/ (exp_time/2.825) / (exp_time/2.825  + 1.)
+    read_noise = sqrt(read_noise_floor**2 + 
+                      12.* read_noise_white**2. * (exp_time/2.825 - 1.)/ (exp_time/2.825) / (exp_time/2.825  + 1.)
                  )
 
 
@@ -985,8 +998,26 @@ if __name__ == "__main__":
 
     PSFs = initialize_PSFs(pixel_scales = [10, 15, 22, 30], slice_scales = [30, 30, 22, 30], PSF_source = "WebbPSF") # Native is in units of 5 mas, so this is 0".075, 0".11, and 0".15
 
-    args = {"gal_flamb": lambda x:0., "pixel_scale": 0.05, "slice_scale": 0.15, "dark_current": 0.01, "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_Content.txt", "min_wave": 4200., "max_wave": 21000., "bad_pixel_rate": 0.0, "offset_par": 4}
-    PSFs = get_spec_with_err(redshift = 1.0, exp_time = 1000., show_plots = 0, phase = 0, **args)["PSFs"]
+    # 6e-19
+    args = {"gal_flamb": lambda x:0, "pixel_scale": 0.05, "slice_scale": 0.15, "dark_current": 0.003,
+            "mdl": 'hsiao', "PSFs": PSFs, "IFURfl": "IFU_R_160720.txt", "min_wave": 4200., "max_wave": 21000., "bad_pixel_rate": 0.0, "offset_par": 4}
+    PSFs = get_spec_with_err(redshift = 1.0, exp_time = 1089.2, show_plots = 1, phase = 0, **args)["PSFs"]
+
+
+    #ETC_result = get_spec_with_err(redshift = 1.0, exp_time = 1089., phase = 0, show_plots = 1, **args)
+    #args["bad_pixel_rate"] = 0.01
+    fffff
+
+    for redshift in [0.5, 1.0, 1.5]:
+        exptime = solve_for_exptime(S_to_N = 3.5*sqrt(15.), redshift = redshift, key1 = "rest_frame_band_S/N", key2 = (5000, 6000), phase = 0, **args)
+        print "# redshift/ exposure time ", redshift, exptime
+
+        for phase in [-8, -6, 6, 8, 10, 12]:
+            ETC_result = get_spec_with_err(redshift = redshift, exp_time = exptime, phase = phase, show_plots = 0, **args)
+            print "#  ", redshift, exptime, phase, ETC_result["rest_frame_band_S/N"][(5000, 6000)]
+
+
+    stop_here_now
 
     """
     import cProfile, pstats, StringIO
